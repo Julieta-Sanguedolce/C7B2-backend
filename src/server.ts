@@ -4,6 +4,7 @@ import express from "express";
 import { Client } from "pg";
 import { getEnvVarOrFail } from "./support/envVarUtils";
 import { setupDBClientConfig } from "./support/setupDBClientConfig";
+import morgan from "morgan";
 
 dotenv.config(); //Read .env file lines as though they were env vars.
 
@@ -15,6 +16,8 @@ const app = express();
 
 app.use(express.json()); //add JSON body parser to each following route handler
 app.use(cors()); //add CORS support to each following route handler
+
+app.use(morgan("tiny"));
 
 app.get("/", async (_req, res) => {
     res.json({ msg: "Hello! There's nothing interesting for GET /" });
@@ -46,17 +49,17 @@ app.put("/votes/:breed", async (req, res) => {
     }
 });
 
-// app.get("/votes/leaderboard", async (req, res) => {
-//     try {
-//         const queryText = "SELECT (breeds";
-//         await client.query("select now()");
-//         res.status(200).send("system ok");
-//     } catch (error) {
-//         //Recover from error rather than letting system halt
-//         console.error(error);
-//         res.status(500).send("An error occurred. Check server logs.");
-//     }
-// });
+app.get("/votes/leaderboard", async (_req, res) => {
+    try {
+        const queryText =
+            "SELECT * FROM breedvotes ORDER BY votes DESC, breed LIMIT 10";
+        const result = await client.query(queryText);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("An error occurred. Check server logs.");
+    }
+});
 
 connectToDBAndStartListening();
 

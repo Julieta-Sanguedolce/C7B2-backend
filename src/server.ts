@@ -32,6 +32,32 @@ app.get("/health-check", async (_req, res) => {
     }
 });
 
+app.put("/votes/:breed", async (req, res) => {
+    try {
+        const { breed } = req.params;
+        const values = [breed];
+        const text =
+            "INSERT INTO breedvotes (breed, votes) VALUES ($1, 1) ON CONFLICT (breed) DO UPDATE SET votes = breedvotes.votes + 1";
+        await client.query(text, values);
+        res.status(200).send("updated successfully");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("An error occurred. Check server logs.");
+    }
+});
+
+// app.get("/votes/leaderboard", async (req, res) => {
+//     try {
+//         const queryText = "SELECT (breeds";
+//         await client.query("select now()");
+//         res.status(200).send("system ok");
+//     } catch (error) {
+//         //Recover from error rather than letting system halt
+//         console.error(error);
+//         res.status(500).send("An error occurred. Check server logs.");
+//     }
+// });
+
 connectToDBAndStartListening();
 
 async function connectToDBAndStartListening() {

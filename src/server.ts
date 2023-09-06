@@ -49,10 +49,46 @@ app.put("/votes/:breed", async (req, res) => {
     }
 });
 
+app.put("/users/:id/votecount", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const values = [id];
+        const text = "UPDATE users SET votes=votes+1 WHERE id = $1";
+        await client.query(text, values);
+        res.status(200).send("updated successfully");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("An error occurred. Check server logs.");
+    }
+});
+
 app.get("/votes/leaderboard", async (_req, res) => {
     try {
         const queryText =
             "SELECT * FROM breedvotes ORDER BY votes DESC, breed LIMIT 10";
+        const result = await client.query(queryText);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("An error occurred. Check server logs.");
+    }
+});
+
+app.post("/users", async (req, res) => {
+    try {
+        const { username } = req.body;
+        const values = [username];
+        const text = "INSERT INTO users (username) VALUES ($1) RETURNING *";
+        const result = await client.query(text, values);
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+app.get("/users", async (_req, res) => {
+    try {
+        const queryText = "SELECT * FROM users";
         const result = await client.query(queryText);
         res.status(200).json(result.rows);
     } catch (error) {
